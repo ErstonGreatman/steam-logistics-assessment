@@ -47,6 +47,14 @@ export type FormSubmitProps = {
 
 /**
  * FormSubmit: a component that displays the form status with icon to the user and handles reset and submit events
+ * @param onReset {() => void} the function to call when the reset button is clicked
+ * @param isResetDisabled {boolean} whether the reset button is disabled
+ * @param onSubmit {() => void} the function to call when the submit button is clicked
+ * @param isSubmitDisabled {boolean} whether the submit button is disabled
+ * @param [icon] {React.ReactNode} the icon to display
+ * @param [status] {React.ReactNode} the status to display
+ * @param [className] {string} the className to apply to the component
+ * @constructor
  */
 const FormSubmit: React.FC<FormSubmitProps> = ({
   status,

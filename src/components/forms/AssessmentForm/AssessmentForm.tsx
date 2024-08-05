@@ -60,6 +60,7 @@ const AssessmentForm: React.FC = () => {
 
   const submitStatus = useMutation({
     mutationFn: ({ data, returnError }: { data: AssessmentFormValues, returnError: boolean }) => {
+      // This is intentional
       console.log(data);
 
       // Simulate a delay
@@ -69,6 +70,7 @@ const AssessmentForm: React.FC = () => {
             return reject('There was an API error of the most grievous kind!');
           }
 
+          // Resolve with a success message
           return resolve('Form submitted successfully!');
 
         }

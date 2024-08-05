@@ -33,6 +33,11 @@ type Props = {
 
 /**
  * ErrorModal: a modal component that lists errors in validation or in a form submission
+ * @param errors {string[]} the list of errors
+ * @param isOpen {boolean} whether the modal is open
+ * @param onClose {() => void} the function to call when the modal is closed
+ * @param [className] {string} the className to apply to the modal
+ * @constructor
  */
 const ErrorModal: React.FC<Props> = ({ errors, isOpen, onClose, className }: Props) => (
   <Modal

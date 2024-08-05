@@ -4,12 +4,24 @@ import { Button, CircularProgress, Box } from '@mui/material';
 import CheckIcon from '@mui/icons-material/Check';
 import { FieldErrors } from 'react-hook-form';
 import { AssessmentFormValues } from './AssessmentFormValues.ts';
+import { FormSubmitProps } from '../FormSubmit.tsx';
 
 
 const iconSize       = '1.25rem';
 const iconDimensions = { width: iconSize, height: iconSize };
 
 
+/**
+ * getFormSubmitProps: returns props for the FormSubmit component
+ * @param {boolean} isDirty - Indicates whether the form is dirty.
+ * @param {Record<string, boolean>} dirtyFields - The fields that are dirty in the form.
+ * @param {FieldErrors<AssessmentFormValues>} errors - The errors in the form.
+ * @param {{ isPending: boolean, isError: boolean, isSuccess: boolean, error: Error | null }} submitStatus - The status of the form submission API call.
+ * @param {() => void} openErrorModal - The function to open the error modal.
+ * @param {() => void} closeErrorModal - The function to close the error modal.
+ * @param {boolean} showErrorModal - Indicates whether to show the error modal.
+ * @returns {Omit<FormSubmitProps, 'onSubmit' | 'onReset'>} The props for form submission.
+ */
 export const getFormSubmitProps = (
   isDirty: boolean,
   dirtyFields: Record<string, boolean>,
@@ -18,7 +30,7 @@ export const getFormSubmitProps = (
   openErrorModal: () => void,
   closeErrorModal: () => void,
   showErrorModal: boolean,
-) => {
+): Omit<FormSubmitProps, 'onSubmit' | 'onReset'> => {
   // Has validation errors
   if (Object.keys(errors).length > 0) {
     return {
