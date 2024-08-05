@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   FormControlLabel,
   TextField,
@@ -7,7 +7,9 @@ import {
   FormControl,
   InputLabel,
   Box,
-  Button, ToggleButton, ToggleButtonGroup, Checkbox,
+  ToggleButton,
+  ToggleButtonGroup,
+  Checkbox,
 } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
 import { useForm, Controller } from 'react-hook-form';
@@ -15,157 +17,212 @@ import CheckIcon from '@mui/icons-material/Check';
 import { AssessmentFormValues, AssessmentFormSchema } from './AssessmentFormValues.ts';
 import { StarTrekSeries } from '../../../utils/StarTrekSeries.ts';
 import { zodResolver } from '@hookform/resolvers/zod';
+import FormSubmit, { FormSubmitProps } from '../FormSubmit.tsx';
+import { getFormSubmitProps } from './formUtils.tsx';
+import { useAssessmentFormStore } from './assessmentFormStore.ts';
+
+
+const styles = {
+  root:        {
+    display:       'flex',
+    flexDirection: 'column',
+    alignItems:    'center',
+    position:      'relative',
+    paddingBottom: '4rem',
+  },
+  formContent: {
+    wrapper:       {
+      display:       'flex',
+      flexDirection: 'column',
+      alignItems:    'center',
+      gap:           '2rem',
+      maxWidth:      '400px',
+      minWidth:      '300px',
+      mt:            '4rem',
+    },
+    starTrek:      { display: 'block', textAlign: 'left' },
+    mordor:        { mt: '1rem' },
+    apiError:      { marginRight: '1rem', width: '1.5rem', height: '1.5rem' },
+    apiErrorCheck: { color: 'green', width: '1.25rem', height: '1.25rem' },
+  },
+};
 
 
 /**
  * AssessmentForm: a component that shows an assessment form and manages the validation and API submission
  */
 const AssessmentForm: React.FC = () => {
-  const submitStatus                        = useMutation({
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const openErrorModal                      = () => setShowErrorModal(true);
+  const closeErrorModal                     = () => setShowErrorModal(false);
+
+  const formStore = useAssessmentFormStore();
+  const [tempFormValues, setTempFormValues] = useState<AssessmentFormValues>(formStore);
+
+  const submitStatus = useMutation({
     mutationFn: ({ data, returnError }: { data: AssessmentFormValues, returnError: boolean }) => {
       console.log(data);
 
-      if (returnError) {
-        return Promise.reject('There was an API error of the most grievous kind!');
-      }
+      // Simulate a delay
+      return new Promise((resolve, reject) => setTimeout(() => {
+          // Simulate an API error
+          if (returnError) {
+            return reject('There was an API error of the most grievous kind!');
+          }
 
-      return Promise.resolve();
+          return resolve('Form submitted successfully!');
+
+        }
+        , 2000));
     },
   });
 
-  const { handleSubmit, control, formState: { errors } } = useForm<AssessmentFormValues>({
-    defaultValues: {
-      name:             '',
-      email:            '',
-      favoriteStarTrek: 'The Next Generation',
-      walkIntoMordor:   false,
-      returnAPIError:   false,
-    },
+  const { handleSubmit, reset, control, getValues, formState: { errors, isDirty, dirtyFields } } = useForm<AssessmentFormValues>({
+    defaultValues: formStore,
     resolver:      zodResolver(AssessmentFormSchema),
   });
 
   const onSubmit = (data: AssessmentFormValues) => {
     submitStatus.mutate({ data, returnError: data.returnAPIError });
+    setTempFormValues(data);
+    reset(data);
   };
 
+  const onReset = () => {
+    reset(formStore);
+    submitStatus.reset();
+  }
+
+  const formSubmitProps: Omit<FormSubmitProps, 'onSubmit' | 'onReset'> = useMemo(() => getFormSubmitProps(
+    isDirty,
+    dirtyFields,
+    errors,
+    submitStatus,
+    openErrorModal,
+    closeErrorModal,
+    showErrorModal,
+  ), [dirtyFields, errors, isDirty, showErrorModal, submitStatus]);
+
+  useEffect(() => {
+    // If the submission is successful, maintain the success state until the form is dirty again
+    if (submitStatus.isSuccess) {
+      useAssessmentFormStore.setState(tempFormValues);
+
+      // The data become the new default values
+      reset(tempFormValues);
+      submitStatus.reset();
+    }
+    // Clear API errors once the form is dirty again
+    if (isDirty) {
+      submitStatus.reset();
+    }
+  }, [getValues, isDirty, reset, submitStatus]);
+
   return (
-    <div>
-      <form onSubmit={handleSubmit(onSubmit)} className="assessment-form">
-        <h2>Assessment Form</h2>
+    <Box
+      component='form'
+      onSubmit={handleSubmit(onSubmit)}
+      sx={styles.root}
+    >
+      <h2>Assessment Form</h2>
 
-        <p>
-          Please fill out this form and we will get back to you soon.
-        </p>
+      <p>
+        Please fill out this form and we will get back to you soon.
+      </p>
 
-        <Box
-          component="section"
-          sx={{
-            display:       'flex',
-            flexDirection: 'column',
-            alignItems:    'center',
-            gap:           '2rem',
-            maxWidth:      '400px',
-            minWidth:      '300px',
-            mt:            '4rem',
-          }}
-        >
-          <Controller
-            name="name"
-            control={control}
-            render={({ field }) => (
-              <TextField {...field} fullWidth InputLabelProps={{ shrink: true }} label="Name" />
-            )}
-          />
+      <Box
+        component='section'
+        sx={styles.formContent.wrapper}
+      >
+        <Controller
+          name='name'
+          control={control}
+          render={({ field }) => (
+            <TextField {...field} fullWidth InputLabelProps={{ shrink: true }} label='Name' />
+          )}
+        />
 
-          <Controller
-            name="email"
-            control={control}
-            render={({ field }) => (
-              <TextField {...field} fullWidth InputLabelProps={{ shrink: true }} type="email" label="Email" />
-            )}
-          />
+        <Controller
+          name='email'
+          control={control}
+          render={({ field }) => (
+            <TextField {...field} fullWidth InputLabelProps={{ shrink: true }} type='email' label='Email' />
+          )}
+        />
 
-          <Controller
-            name="favoriteStarTrek"
-            control={control}
-            render={({ field }) => (
-              <FormControl fullWidth>
-                <InputLabel id="favorite-star-trek-label">Favorite Star Trek Series</InputLabel>
-                <Select
+        <Controller
+          name='favoriteStarTrek'
+          control={control}
+          render={({ field }) => (
+            <FormControl fullWidth>
+              <InputLabel id='favorite-star-trek-label'>Favorite Star Trek Series</InputLabel>
+              <Select
+                {...field}
+                labelId='favorite-star-trek-label'
+                label='Favorite Star Trek Series'
+                id='favorite-star-trek'
+                value={field.value}
+                onChange={(event) => field.onChange(event.target.value)}
+                sx={styles.formContent.starTrek}
+              >
+                {StarTrekSeries.map((series => <MenuItem key={series} value={series}>
+                  {series}
+                </MenuItem>))}
+              </Select>
+            </FormControl>
+          )}
+        />
+
+        <Controller
+          name='walkIntoMordor'
+          control={control}
+          render={({ field }) => (
+            <FormControlLabel
+              control={
+                <ToggleButtonGroup
                   {...field}
-                  labelId="favorite-star-trek-label"
-                  label="Favorite Star Trek Series"
-                  id="favorite-star-trek"
-                  value={field.value}
-                  onChange={(event) => field.onChange(event.target.value)}
-                  sx={{ display: 'block', textAlign: 'left' }}
+                  color='primary'
+                  value={field.value ? 'yes' : 'no'}
+                  exclusive
+                  onChange={(event, value) => field.onChange(value === 'yes')}
+                  aria-label='Will take the Ring to Mordor?'
+                  sx={styles.formContent.mordor}
                 >
-                  {StarTrekSeries.map((series => <MenuItem key={series} value={series}>
-                    {series}
-                  </MenuItem>))}
-                </Select>
-              </FormControl>
-            )}
-          />
+                  <ToggleButton value='yes'>Yes</ToggleButton>
+                  <ToggleButton value='no'>No</ToggleButton>
+                </ToggleButtonGroup>
+              }
+              label='Will take the Ring to Mordor?'
+              labelPlacement='top'
+            />
+          )}
+        />
 
-          <Controller
-            name="walkIntoMordor"
-            control={control}
-            render={({ field }) => (
-              <FormControlLabel
-                control={
-                  <ToggleButtonGroup
-                    {...field}
-                    color="primary"
-                    value={field.value ? 'yes' : 'no'}
-                    exclusive
-                    onChange={(event, value) => field.onChange(value === 'yes')}
-                    aria-label="Will take the Ring to Mordor?"
-                    sx={{ mt: '1rem' }}
-                  >
-                    <ToggleButton value="yes">Yes</ToggleButton>
-                    <ToggleButton value="no">No</ToggleButton>
-                  </ToggleButtonGroup>
-                }
-                label="Will take the Ring to Mordor?"
-                labelPlacement="top"
-              />
-            )}
-          />
+        <Controller
+          name='returnAPIError'
+          control={control}
+          render={({ field }) => (
+            <FormControlLabel
+              control={<Checkbox
+                checked={field.value}
+                onChange={(event, value) => field.onChange(value)}
+                sx={styles.formContent.apiError}
+              >
+                {field.value ? <CheckIcon sx={styles.formContent.apiErrorCheck} /> : null}
+              </Checkbox>}
+              label='Return API Error?'
+              sx={{ userSelect: 'none' }}
+            />
+          )}
+        />
+      </Box>
 
-          <Controller
-            name="returnAPIError"
-            control={control}
-            render={({ field }) => (
-              <FormControlLabel
-                control={<Checkbox
-                  value={field.value}
-                  onChange={(event, value) => field.onChange(value)}
-                  sx={{ marginRight: '1rem', width: '1.5rem', height: '1.5rem' }}
-                >
-                  {field.value ? <CheckIcon sx={{ color: 'green', width: '1.25rem', height: '1.25rem' }} /> : null}
-                </Checkbox>}
-                label="Return API Error?"
-                sx={{ userSelect: 'none' }}
-              />
-            )}
-          />
-        </Box>
-
-        <Button variant="contained" type="submit" sx={{ marginTop: '2rem' }}>Submit</Button>
-
-        {errors && (
-          <div style={{ textAlign: 'left' }}>
-            <h4>Validation Errors</h4>
-            <ul>
-              {Object.entries(errors).map(([key, value]) => <li key={key}>{value.message}</li>)}
-            </ul>
-          </div>
-        )}
-        {submitStatus.isError && <p>API Error: {submitStatus.error}</p>}
-        {submitStatus.isSuccess && <p>Form submitted successfully!</p>}
-      </form>
-    </div>
+      <FormSubmit
+        onReset={onReset}
+        onSubmit={handleSubmit(onSubmit)}
+        {...formSubmitProps}
+      />
+    </Box>
   );
 };
 
