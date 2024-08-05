@@ -13,7 +13,6 @@ import {
 } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
 import { useForm, Controller } from 'react-hook-form';
-import CheckIcon from '@mui/icons-material/Check';
 import { AssessmentFormValues, AssessmentFormSchema } from './AssessmentFormValues.ts';
 import { StarTrekSeries } from '../../../utils/StarTrekSeries.ts';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -184,7 +183,7 @@ const AssessmentForm: React.FC = () => {
                   color='primary'
                   value={field.value ? 'yes' : 'no'}
                   exclusive
-                  onChange={(event, value) => field.onChange(value === 'yes')}
+                  onChange={(_, value) => field.onChange(value === 'yes')}
                   aria-label='Will take the Ring to Mordor?'
                   sx={styles.formContent.mordor}
                 >
@@ -205,11 +204,9 @@ const AssessmentForm: React.FC = () => {
             <FormControlLabel
               control={<Checkbox
                 checked={field.value}
-                onChange={(event, value) => field.onChange(value)}
+                onChange={(_, value) => field.onChange(value)}
                 sx={styles.formContent.apiError}
-              >
-                {field.value ? <CheckIcon sx={styles.formContent.apiErrorCheck} /> : null}
-              </Checkbox>}
+              />}
               label='Return API Error?'
               sx={{ userSelect: 'none' }}
             />
