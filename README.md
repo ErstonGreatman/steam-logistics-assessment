@@ -1,6 +1,6 @@
 # Assessment Notes
 
-This was an interesting and challenging assessment. Primarily because I decided to use MaterialUI, Zustand, Zod, React Hook Form, and React Query, none of which I had used before (excpet for a little bit of Zod).
+This was an interesting and challenging assessment. Primarily because I decided to use Material UI, Zustand, Zod, React Hook Form, and React Query, none of which I had used before (except for a little bit of Zod).
 
 I tried to set up a baseline app for the assessment itself and then added the FormSubmit via a separate branch now merged in. The pull requests are still around for evaluation reasons.
 
