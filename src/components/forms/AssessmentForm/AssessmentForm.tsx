@@ -115,7 +115,7 @@ const AssessmentForm: React.FC = () => {
     if (isDirty) {
       submitStatus.reset();
     }
-  }, [getValues, isDirty, reset, submitStatus]);
+  }, [getValues, isDirty, reset, submitStatus, tempFormValues]);
 
   return (
     <Box
@@ -184,14 +184,14 @@ const AssessmentForm: React.FC = () => {
                   value={field.value ? 'yes' : 'no'}
                   exclusive
                   onChange={(_, value) => field.onChange(value === 'yes')}
-                  aria-label='Will take the Ring to Mordor?'
+                  aria-label='Will you take the Ring to Mordor?'
                   sx={styles.formContent.mordor}
                 >
                   <ToggleButton value='yes'>Yes</ToggleButton>
                   <ToggleButton value='no'>No</ToggleButton>
                 </ToggleButtonGroup>
               }
-              label='Will take the Ring to Mordor?'
+              label='Will you take the Ring to Mordor?'
               labelPlacement='top'
             />
           )}
